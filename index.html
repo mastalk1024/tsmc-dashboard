@@ -9,6 +9,12 @@
   *{box-sizing:border-box}
   body{background:var(--ink);color:var(--text);margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;font-variant-numeric:tabular-nums}
   .wrap{max-width:960px;margin:0 auto;padding:28px 18px 48px}
+  .tabs{position:sticky;top:0;z-index:20;display:flex;gap:2px;margin:0 -18px 22px;padding:8px 18px 0;background:var(--ink);border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tab{white-space:nowrap;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);font:inherit;font-size:14px;font-weight:600;padding:10px 15px;cursor:pointer;margin-bottom:-1px}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+  .tabpanel{display:none}
+  .tabpanel.active{display:block}
   .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:8px}
   h1{font-family:Georgia,"Times New Roman",serif;font-weight:600;font-size:26px;line-height:1.25;margin:0 0 8px}
   .teal{color:var(--teal)}.gold{color:var(--gold)}
@@ -165,6 +171,17 @@
   .scen td{font-family:Georgia,serif;font-weight:600}
   .scen td.mid{box-shadow:inset 0 0 0 2px rgba(228,179,99,.35)}
   .up{color:var(--green)} .dn{color:var(--red)} .flat{color:var(--muted)}
+  .buystat{display:flex;gap:10px;margin-bottom:10px}
+  .buystat>div{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+  .buystat .bl{display:block;font-size:10.5px;color:var(--muted)}
+  .buystat .bv{display:block;font-family:Georgia,serif;font-size:16px;font-weight:600;margin-top:3px}
+  .buytable{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:10px}
+  .buytable th,.buytable td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right}
+  .buytable th{color:var(--muted);font-weight:600}.buytable td{font-family:Georgia,serif}
+  .buytable td.x{color:var(--red);cursor:pointer;text-align:center;font-family:inherit}
+  .addrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .bin{flex:1;min-width:64px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:Georgia,serif;font-size:13px;padding:6px 8px;outline:none}
+  .bin:focus{border-color:#3d5568}
   .foot{font-size:11.5px;color:var(--muted);margin-top:20px;line-height:1.5;text-align:center}
   @media(max-width:720px){
     .cards{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:1fr}
@@ -177,9 +194,16 @@
 <body>
 <div class="wrap">
   <div class="eyebrow">每日進場儀表板 · 台積電 + 高股息 ETF</div>
-  <h1>今天適不適合進場？</h1>
-  <p class="sub">最上面先看今日判斷與市場氛圍；左邊台積電、右邊高股息 ETF。下方是長期兩段式規劃(累積 → 領息)。</p>
+  <h1>台積電 + 高股息 ETF 投資儀表板</h1>
+  <p class="sub">四個分頁：每日進場判斷、長期規劃、持股成本、基本面。點上方頁籤切換。</p>
 
+  <div class="tabs">
+    <button class="tab active" data-p="1">每日進場</button>
+    <button class="tab" data-p="2">長期規劃</button>
+    <button class="tab" data-p="3">持股成本</button>
+    <button class="tab" data-p="4">基本面</button>
+  </div>
+  <div class="tabpanel active" id="panel1">
   <!-- ===== VERDICT (TOP) ===== -->
   <div class="verdict" id="verdict">
     <div class="vtop">
@@ -244,8 +268,8 @@
     </div>
   </div>
   <div class="disc" id="etf_note"></div>
-
-  <hr class="divider">
+  </div>
+  <div class="tabpanel" id="panel2">
   <div class="eyebrow" style="color:var(--gold)">長期兩段式規劃</div>
   <h1 style="font-size:22px">累積本金 → 轉領息，月領 10 萬</h1>
 
@@ -336,9 +360,61 @@
     <div class="revout">在殖利率 <span id="rev_yield"></span> 下，需要本金 <strong id="rev_cap"></strong>（約 <span id="rev_cap_s"></span>）
       <button class="setbtn" id="setbtn">設為累積目標 ↑</button></div>
   </div>
+  </div>
+  <div class="tabpanel" id="panel3">
+  <!-- BUY TRACKER -->
+  <div class="eyebrow" style="color:var(--green)">持股成本追蹤</div>
+  <h1 style="font-size:22px">00918 / 00919 買入紀錄與平均成本</h1>
 
+  <div class="twocol">
+    <div class="col">
+      <div class="coltitle etf">00918 大華優利高填息30</div>
+      <div class="buystat">
+        <div><span class="bl">平均成本</span><span class="bv" id="avg18">—</span></div>
+        <div><span class="bl">總股數</span><span class="bv" id="qty18">—</span></div>
+        <div><span class="bl">總投入</span><span class="bv" id="cost18">—</span></div>
+      </div>
+      <table class="buytable" id="rec18"></table>
+      <div class="addrow">
+        <input type="number" class="bin" id="p18" placeholder="價格" step="0.01">
+        <input type="number" class="bin" id="s18" placeholder="股數" step="1000" value="1000">
+        <input type="number" class="bin" id="f18" placeholder="手續費" step="1" value="20">
+        <button class="abtn" id="add18">＋ 新增</button>
+      </div>
+    </div>
+    <div class="col">
+      <div class="coltitle etf">00919 群益台灣精選高息</div>
+      <div class="buystat">
+        <div><span class="bl">平均成本</span><span class="bv" id="avg19">—</span></div>
+        <div><span class="bl">總股數</span><span class="bv" id="qty19">—</span></div>
+        <div><span class="bl">總投入</span><span class="bv" id="cost19">—</span></div>
+      </div>
+      <table class="buytable" id="rec19"></table>
+      <div class="addrow">
+        <input type="number" class="bin" id="p19" placeholder="價格" step="0.01">
+        <input type="number" class="bin" id="s19" placeholder="股數" step="1000" value="1000">
+        <input type="number" class="bin" id="f19" placeholder="手續費" step="1" value="20">
+        <button class="abtn" id="add19">＋ 新增</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase p"><span class="pnum p">◎</span> 買入策略試算（跌加碼、漲少買）</div>
+  <div class="fugrid-in">
+    <div class="field"><div class="flabel">00918 基準價</div><input type="number" class="fnum" id="base18" value="33.93"></div>
+    <div class="field"><div class="flabel">00919 基準價</div><input type="number" class="fnum" id="base19" value="31.95"></div>
+    <div class="field"><div class="flabel">剩餘預算</div><input type="number" class="fnum" id="budget" value="1070000"></div>
+  </div>
+  <div class="chartwrap" style="padding:14px 16px">
+    <div class="scenwrap"><table class="scen" id="buytrig"></table></div>
+    <div class="fhint" id="buy_hint" style="margin-top:10px"></div>
+  </div>
+  <div class="disc">
+    「跌 1~1.5% 買 1 張、漲 1% 買 500 股」方向對（跌買多、漲買少），但<b>無法保證最低成本</b>，且<b>漲時買會拉高均價</b>。要更低成本：改「階梯往下加碼」（跌 1% 買 1 張、跌 2% 買 2 張、跌 3% 買 3 張），漲時不追或少追，保留銀彈給深跌。以上為框架試算、非投資建議。
+  </div>
+  </div>
+  <div class="tabpanel" id="panel4">
   <!-- FUNDAMENTALS -->
-  <hr class="divider">
   <div class="eyebrow" style="color:var(--gold)">基本面 · 台積電</div>
   <h1 style="font-size:22px">五年財報 → 三年股價推估</h1>
 
@@ -375,6 +451,7 @@
     綠＝高於現價（上檔）、紅＝低於現價；中間欄（中性本益比）以金框標示。此為 EPS×本益比 的機械式推估，非預測、非投資建議；EPS 與本益比一旦不如預期，股價雙重承壓。
   </div>
 
+  </div>
   <div class="foot">市場快照為 2026/09/29 手動快照、需自行更新；殖利率/報酬為假設，高股息今年殖利率偏高含資本利得、非常態。所有數字僅供規劃參考，非投資建議，重大決策請諮詢專業人士。</div>
 </div>
 
@@ -384,11 +461,15 @@ const RATE_LABEL={0.04:"保守 · 債券/穩健",0.06:"高股息 ETF",0.08:"市�
 const LS_KEY="tsmc_planner_v2";
 function loadLS(){try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return{}}}
 function saveLS(o){try{localStorage.setItem(LS_KEY,JSON.stringify(o))}catch(e){}}
+function persistAll(){saveLS({log:state.log,news:state.news,buys18:state.buys18,buys19:state.buys19})}
 const saved=loadLS();
 const state={principal:4690000,monthly:20000,target:20000000,selRate:0.08,yield:0.06,want:100000,
   vol:0.18,seed:12345,dca:12,close:2475,cheap:2300,pricey:2700,tp:3300,
   income:120000,expense:75000,loanPay:55000,cash:500000,etfamt:1400000,yeartarget:100000,
   eps26:105,eps27:135,eps28:170,peLow:20,peMid:25,peHigh:30,
+  buys18:(saved.buys18&&saved.buys18.length?saved.buys18:[{p:33.93,sh:5000,fee:67}]),
+  buys19:(saved.buys19&&saved.buys19.length?saved.buys19:[{p:31.95,sh:5000,fee:63}]),
+  base18:33.93,base19:31.95,budget:1070000,
   prevClose:2475,twfut:47631,us:{dow:[-0.31,0.93,-0.67],sp:[-0.02,0.51,-0.77],nas:[0.01,0.48,-0.92],sox:[-1.30,1.00,-1.61]},
   log:saved.log||[],news:(saved.news!==undefined?saved.news:null)};
 
@@ -525,6 +606,9 @@ function render(){
   document.getElementById("log_status").textContent=ls;
   drawPriceChart();
 
+  // ----- buy tracker -----
+  renderBuys();
+
   // ----- fundamentals scenario -----
   (function(){
     const cur=state.close;
@@ -635,8 +719,42 @@ function render(){
   document.getElementById("rev_cap_s").textContent=fmtShort(reqCap);
 }
 
+function avgCost(arr){let sh=0,c=0;arr.forEach(x=>{sh+=x.sh;c+=x.p*x.sh+(x.fee||0)});return{sh,c,avg:sh>0?c/sh:0}}
+function renderBuys(){
+  [["18",state.buys18],["19",state.buys19]].forEach(([k,arr])=>{
+    const r=avgCost(arr);
+    document.getElementById("avg"+k).textContent=r.avg>0?r.avg.toFixed(2):"—";
+    document.getElementById("qty"+k).textContent=r.sh.toLocaleString();
+    document.getElementById("cost"+k).textContent="$"+Math.round(r.c).toLocaleString();
+    let h="<tr><th>價格</th><th>股數</th><th>手續費</th><th></th></tr>";
+    arr.forEach((x,i)=>{h+="<tr><td>"+x.p+"</td><td>"+x.sh.toLocaleString()+"</td><td>"+(x.fee||0)+"</td><td class='x' data-k='"+k+"' data-i='"+i+"'>✕</td></tr>"});
+    document.getElementById("rec"+k).innerHTML=h;
+  });
+  document.querySelectorAll("#rec18 .x, #rec19 .x").forEach(el=>el.onclick=()=>{
+    const arr=el.dataset.k==="18"?state.buys18:state.buys19; arr.splice(+el.dataset.i,1); persistAll(); render();
+  });
+  // strategy triggers
+  const rows=[["00918",state.base18],["00919",state.base19]];
+  let t="<tr><th>ETF / 基準價</th><th>跌1% 買1張</th><th>跌1.5% 買1張</th><th>漲1% 買500股</th></tr>";
+  rows.forEach(([n,b])=>{
+    t+="<tr><td>"+n+"<br><span style='font-size:10px;color:var(--muted);font-weight:400'>"+b+"</span></td>"+
+       "<td class='up'>"+(b*0.99).toFixed(2)+"</td>"+
+       "<td class='up'>"+(b*0.985).toFixed(2)+"</td>"+
+       "<td class='dn'>"+(b*1.01).toFixed(2)+"</td></tr>";
+  });
+  document.getElementById("buytrig").innerHTML=t;
+  const avgP=(state.base18+state.base19)/2;
+  const lots=avgP>0?Math.floor(state.budget/(avgP*1000)):0;
+  document.getElementById("buy_hint").textContent="剩餘預算 $"+Math.round(state.budget).toLocaleString()+"，以均價約 "+avgP.toFixed(2)+" 計，約可再買 "+lots+" 張（一天最多 3 次；建議跌越多買越多）。";
+}
+function addBuy(arr,pid,sid,fid){
+  const p=parseFloat(document.getElementById(pid).value),sh=parseFloat(document.getElementById(sid).value),fee=parseFloat(document.getElementById(fid).value)||0;
+  if(!(p>0&&sh>0)){alert("請輸入有效的價格與股數");return;}
+  arr.push({p,sh,fee}); persistAll(); document.getElementById(pid).value=""; render();
+}
+
 // sliders
-["principal","monthly","target","yield","want","vol","dca","close","cheap","pricey","tp","etfamt","yeartarget","income","expense","loanPay","cash","eps26","eps27","eps28","peLow","peMid","peHigh"].forEach(id=>{
+["principal","monthly","target","yield","want","vol","dca","close","cheap","pricey","tp","etfamt","yeartarget","income","expense","loanPay","cash","eps26","eps27","eps28","peLow","peMid","peHigh","base18","base19","budget"].forEach(id=>{
   document.getElementById(id).addEventListener("input",e=>{state[id]=parseFloat(e.target.value);render()});
 });
 // snapshot number fields
@@ -647,14 +765,23 @@ function render(){
 // news textarea persists
 const newsEl=document.getElementById("news");
 if(state.news!==null)newsEl.value=state.news;else state.news=newsEl.value;
-newsEl.addEventListener("input",e=>{state.news=e.target.value;saveLS({log:state.log,news:state.news})});
+newsEl.addEventListener("input",e=>{state.news=e.target.value;persistAll()});
 // buttons
+document.getElementById("add18").onclick=()=>addBuy(state.buys18,"p18","s18","f18");
+document.getElementById("add19").onclick=()=>addBuy(state.buys19,"p19","s19","f19");
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".tabpanel").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  const pn=document.getElementById("panel"+t.dataset.p); if(pn)pn.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
 document.getElementById("rebtn").onclick=()=>{state.seed=(state.seed*1103515245+12345)>>>0;render()};
 document.getElementById("setbtn").onclick=()=>{const r=state.want*12/state.yield;state.target=Math.round(r/1e6)*1e6;document.getElementById("target").value=state.target;render();window.scrollTo({top:document.querySelector('.divider').offsetTop,behavior:"smooth"})};
 document.getElementById("logbtn").onclick=()=>{const d=new Date().toISOString().slice(0,10);
   if(state.log.length&&state.log[state.log.length-1].d===d)state.log[state.log.length-1].p=state.close;else state.log.push({d,p:state.close});
-  saveLS({log:state.log,news:state.news});render()};
-document.getElementById("clearbtn").onclick=()=>{if(confirm("確定清除所有收盤價紀錄？")){state.log=[];saveLS({log:state.log,news:state.news});render()}};
+  persistAll();render()};
+document.getElementById("clearbtn").onclick=()=>{if(confirm("確定清除所有收盤價紀錄？")){state.log=[];persistAll();render()}};
 render();
 
 // ===== auto-fetch market data from data.json (same-origin, updated by GitHub Actions) =====
