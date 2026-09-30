@@ -1,4 +1,4 @@
-// 抓取台積電 / 加權指數 / 美股四大指數，寫入 data.json
+// 抓取台積電 / 加權指數 / 美股四大指數，並自動產生「數據解讀」，寫入 data.json
 // 在 GitHub Actions 伺服器端執行，無 CORS 限制。資料來源：Yahoo Finance（非官方，可能變動）
 const fs = require("fs");
 
@@ -23,6 +23,51 @@ function pctSeries(closes, n = 3) {
   while (out.length < n) out.unshift(0);
   return out.slice(-n);
 }
+// 取最新一日漲跌 %
+function lastChange(closes) {
+  if (!closes || closes.length < 2) return null;
+  const a = closes[closes.length - 2], b = closes[closes.length - 1];
+  return Number((((b - a) / a) * 100).toFixed(2));
+}
+
+// 依收盤數據自動產生一段中文解讀
+function buildNote(d) {
+  const parts = [];
+  const us = [["道瓊", d.dow], ["S&P", d.sp], ["納斯達克", d.nas], ["費半", d.sox]]
+    .map(([n, a]) => [n, Array.isArray(a) ? a[a.length - 1] : null])
+    .filter((x) => x[1] != null);
+  if (us.length) {
+    const ups = us.filter((x) => x[1] > 0).length, downs = us.filter((x) => x[1] < 0).length;
+    const tone = ups === us.length ? "同步收紅" : downs === us.length ? "同步收黑" : "漲跌互現";
+    const sox = d.sox ? d.sox[d.sox.length - 1] : null;
+    let line = `美股${tone}`;
+    if (sox != null) {
+      line += `，費半${sox >= 0 ? "+" : ""}${sox}%`;
+      if (sox <= -1) line += "（半導體轉弱，留意台積電/AI 供應鏈壓力）";
+      else if (sox >= 1) line += "（半導體走強，有利台積電/AI 供應鏈）";
+    }
+    parts.push(line + "。");
+  }
+  if (d.tsmc && d.tsmc.price) {
+    let s = `台積電收 ${d.tsmc.price}`;
+    if (d.tsmc.prevClose) {
+      const c = ((d.tsmc.price - d.tsmc.prevClose) / d.tsmc.prevClose) * 100;
+      s += `（${c >= 0 ? "+" : ""}${c.toFixed(2)}%）`;
+    }
+    parts.push(s + "。");
+  }
+  if (d.twii) {
+    let s = `加權指數 ${d.twii}`;
+    if (d.twiiChg != null) s += `（${d.twiiChg >= 0 ? "+" : ""}${d.twiiChg}%）`;
+    parts.push(s + "。");
+  }
+  if (us.length) {
+    const avg = us.reduce((a, x) => a + x[1], 0) / us.length;
+    const mood = avg >= 0.5 ? "外部氛圍偏強" : avg <= -0.5 ? "外部氛圍偏弱" : "外部氛圍中性";
+    parts.push(mood + "，仍以個人設定的價位區間為主要進出依據。");
+  }
+  return parts.join("");
+}
 
 (async () => {
   const data = { updated: new Date().toISOString(), source: "Yahoo Finance" };
@@ -35,6 +80,7 @@ function pctSeries(closes, n = 3) {
   try {
     const w = await chart("^TWII");
     data.twii = Math.round(w.price);
+    data.twiiChg = lastChange(w.closes);
   } catch (e) { data.twiiError = String(e); }
 
   for (const [k, sym] of [["dow", "^DJI"], ["sp", "^GSPC"], ["nas", "^IXIC"], ["sox", "^SOX"]]) {
@@ -44,7 +90,9 @@ function pctSeries(closes, n = 3) {
     } catch (e) { data[k + "Error"] = String(e); }
   }
 
-  // 若這次全部抓取失敗，保留舊檔，避免把有效資料洗掉
+  // 自動解讀（依數據，非新聞/非投資建議）
+  try { data.note = buildNote(data); } catch (e) { data.noteError = String(e); }
+
   const gotSomething = data.tsmc || data.twii || data.dow || data.sp || data.nas || data.sox;
   if (!gotSomething && fs.existsSync("data.json")) {
     console.log("全部抓取失敗，保留現有 data.json");

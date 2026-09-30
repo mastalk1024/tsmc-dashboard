@@ -88,6 +88,8 @@
   .usbox input{width:100%;text-align:center;background:transparent;border:none;font-family:Georgia,serif;font-size:15px;font-weight:600;outline:none;border-bottom:1px dashed #3a4658;padding:1px 0}
   .usbox .up{color:var(--green)}.usbox .dn{color:var(--red)}
   .newsarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:#c9d4de;font-family:inherit;font-size:12px;line-height:1.55;padding:10px;resize:vertical;min-height:70px;outline:none}
+  .autonote{background:linear-gradient(160deg,#131f2e,#182430);border:1px solid #2e4356;border-radius:10px;color:#dbe6f0;font-size:12.5px;line-height:1.6;padding:11px 13px;margin-bottom:14px}
+  .autonote .an-tag{display:block;font-size:10.5px;color:var(--blue);font-weight:700;margin-bottom:4px}
   .snapnote{font-size:11px;color:var(--muted);margin-top:9px;line-height:1.5}
   /* two column */
   .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px}
@@ -191,8 +193,9 @@
       <div class="rl">納斯達克</div><input type="number" step="0.01" id="us_nas_0"><input type="number" step="0.01" id="us_nas_1"><input type="number" step="0.01" id="us_nas_2">
       <div class="rl">費城半導體</div><input type="number" step="0.01" id="us_sox_0"><input type="number" step="0.01" id="us_sox_1"><input type="number" step="0.01" id="us_sox_2">
     </div>
-    <div style="font-size:11.5px;color:var(--muted);margin-bottom:6px">相關新聞／盤前重點（貼上你看到的消息）</div>
-    <textarea class="newsarea" id="news">9/28 美股四大指數同步收黑，費半 -1.61%，ARM/高通/美光/AMD 重挫；NVIDIA 逆勢 +1.68%（加碼庫藏股至 2,350 億美元）。油價與美債殖利率上升為主要壓力。台股 9/29 跌 392 點失守 48K，外資賣超 632 億，台積電收平盤 2,475。近月台指期約 47,600。</textarea>
+    <div class="autonote"><span class="an-tag">自動解讀（依收盤數據，排程於美股/台股收盤後更新）</span><span id="autonote">—</span></div>
+    <div style="font-size:11.5px;color:var(--muted);margin-bottom:6px">我的補充筆記（手動，存在本機）</div>
+    <textarea class="newsarea" id="news" placeholder="想補充的個人筆記可打在這（例如：留意某法說會、某均線支撐…）"></textarea>
     <div class="snapnote">本頁部署在 GitHub Pages，市場數據由排程每日自動抓取（Yahoo Finance，非官方來源）；某格抓取失敗會保留上次資料，你也可手動覆蓋。台指期以加權指數近似；美股/新聞僅供研判氛圍，不改變「以你設定價位判斷買賣區」的核心邏輯。重新整理頁面即取得最新資料。</div>
   </div>
 
@@ -590,6 +593,7 @@ async function loadAuto(){
       if(d.tsmc.prevClose){state.prevClose=d.tsmc.prevClose; const pc=document.getElementById('prevClose'); if(pc)pc.value=d.tsmc.prevClose;}
     }
     if(d.twii){state.twfut=d.twii; const tf=document.getElementById('twfut'); if(tf)tf.value=d.twii;}
+    if(d.note){const an=document.getElementById('autonote'); if(an)an.textContent=d.note;}
     ['dow','sp','nas','sox'].forEach(k=>{
       if(Array.isArray(d[k])){
         let arr=d[k].slice(-3); while(arr.length<3)arr.unshift(0);
