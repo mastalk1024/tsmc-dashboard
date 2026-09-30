@@ -2,13 +2,16 @@
 cd "$(dirname "$0")" || exit 1
 echo "📂 資料夾：$(pwd)"
 
-echo "⏳ (1/2) 上傳變更到 GitHub..."
+echo "⏳ (1/3) 先同步雲端最新資料..."
+git pull --no-edit || echo "（pull 略過）"
+
+echo "⏳ (2/3) 上傳本機變更..."
 git add -A
 git commit -m "update $(date '+%Y/%m/%d %H:%M')" || echo "（沒有檔案變更，略過 commit）"
 git push || echo "⚠ push 略過（可能沒變更）"
 
 echo ""
-echo "⏳ (2/2) 觸發雲端抓取最新資料..."
+echo "⏳ (3/3) 觸發雲端抓取最新資料..."
 TOKEN=$(cat ~/.tsmc_token 2>/dev/null | tr -d '[:space:]')
 if [ -z "$TOKEN" ]; then
   echo "❌ 找不到 token（~/.tsmc_token）"
