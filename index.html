@@ -148,6 +148,23 @@
   .setbtn:hover{background:#122029}
   .disc{background:#141d27;border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:12px}
   .divider{border:none;border-top:1px solid var(--line);margin:32px 0 8px}
+  .futable{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:12.5px}
+  .futable th,.futable td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
+  .futable th:first-child,.futable td:first-child{text-align:left;color:var(--muted)}
+  .futable th{color:var(--muted);font-weight:600;font-size:11.5px}
+  .futable td{font-family:Georgia,serif}
+  .fugrid-in{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+  .fugrid-in .field{padding:12px}.fugrid-in .flabel{font-size:12px}
+  .fnum{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:Georgia,serif;font-size:18px;font-weight:600;padding:6px 8px;margin-top:6px;outline:none}
+  .fnum:focus{border-color:#3d5568}
+  .scenwrap{overflow-x:auto}
+  .scen{width:100%;border-collapse:collapse;font-size:13px;min-width:420px}
+  .scen th,.scen td{padding:10px 8px;border:1px solid var(--line);text-align:center}
+  .scen th{color:var(--muted);font-weight:600;font-size:12px;background:var(--panel2)}
+  .scen td:first-child,.scen th:first-child{text-align:left;color:var(--text);font-weight:600;background:var(--panel2)}
+  .scen td{font-family:Georgia,serif;font-weight:600}
+  .scen td.mid{box-shadow:inset 0 0 0 2px rgba(228,179,99,.35)}
+  .up{color:var(--green)} .dn{color:var(--red)} .flat{color:var(--muted)}
   .foot{font-size:11.5px;color:var(--muted);margin-top:20px;line-height:1.5;text-align:center}
   @media(max-width:720px){
     .cards{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:1fr}
@@ -320,6 +337,44 @@
       <button class="setbtn" id="setbtn">設為累積目標 ↑</button></div>
   </div>
 
+  <!-- FUNDAMENTALS -->
+  <hr class="divider">
+  <div class="eyebrow" style="color:var(--gold)">基本面 · 台積電</div>
+  <h1 style="font-size:22px">五年財報 → 三年股價推估</h1>
+
+  <div class="phase g"><span class="pnum g">★</span> 過去五年實際數字</div>
+  <div class="chartwrap" style="padding:14px 16px">
+    <table class="futable">
+      <tr><th>年度</th><th>營收</th><th>年增</th><th>毛利率</th><th>EPS</th><th>年底本益比</th></tr>
+      <tr><td>2021</td><td>1.59兆</td><td>+18.5%</td><td>51.6%</td><td>23.0</td><td>27.8</td></tr>
+      <tr><td>2022</td><td>2.26兆</td><td>+42.6%</td><td>59.6%</td><td>39.2</td><td>13.1</td></tr>
+      <tr><td>2023</td><td>2.16兆</td><td>-4.5%</td><td>54.4%</td><td>32.3</td><td>17.2</td></tr>
+      <tr><td>2024</td><td>2.89兆</td><td>+33.9%</td><td>56.1%</td><td>45.3</td><td>26.9</td></tr>
+      <tr><td>2025</td><td>3.81兆</td><td>+31.6%</td><td>~60%</td><td>66.3</td><td>25.3</td></tr>
+    </table>
+    <div class="fhint">2026 上半年：EPS 已賺 49.3（Q1 22.08＋Q2 27.25），毛利率升至 66-68%。目前本益比約 28 倍（近五年區間約 13~33）。</div>
+  </div>
+
+  <div class="phase g"><span class="pnum g">✎</span> 三年股價推估（EPS × 本益比，可自行調整）</div>
+  <div class="fugrid-in">
+    <div class="field"><div class="flabel">2026 EPS 預估</div><input type="number" class="fnum" id="eps26" value="105"></div>
+    <div class="field"><div class="flabel">2027 EPS 預估</div><input type="number" class="fnum" id="eps27" value="135"></div>
+    <div class="field"><div class="flabel">2028 EPS 預估</div><input type="number" class="fnum" id="eps28" value="170"></div>
+  </div>
+  <div class="fugrid-in">
+    <div class="field"><div class="flabel">保守 本益比</div><input type="number" class="fnum" id="peLow" value="20"></div>
+    <div class="field"><div class="flabel">中性 本益比</div><input type="number" class="fnum" id="peMid" value="25"></div>
+    <div class="field"><div class="flabel">樂觀 本益比</div><input type="number" class="fnum" id="peHigh" value="30"></div>
+  </div>
+  <div class="chartwrap" style="padding:14px 16px">
+    <div class="scenwrap"><table class="scen" id="scentable"></table></div>
+    <div class="fhint" id="scen_hint" style="margin-top:10px"></div>
+  </div>
+  <div class="disc">
+    法人預估參考（會隨每季調整、各家差異大）：2026-28 美元營收年增約 35%/30%/31%；毛利率 2026 ~67%、2027 ~69%；EPS 2026 ~100-107、2027 ~104-153、2028 ~178；一年目標價外資區間約 2,150-3,100、共識均值約 3,224。<br>
+    綠＝高於現價（上檔）、紅＝低於現價；中間欄（中性本益比）以金框標示。此為 EPS×本益比 的機械式推估，非預測、非投資建議；EPS 與本益比一旦不如預期，股價雙重承壓。
+  </div>
+
   <div class="foot">市場快照為 2026/09/29 手動快照、需自行更新；殖利率/報酬為假設，高股息今年殖利率偏高含資本利得、非常態。所有數字僅供規劃參考，非投資建議，重大決策請諮詢專業人士。</div>
 </div>
 
@@ -333,6 +388,7 @@ const saved=loadLS();
 const state={principal:4690000,monthly:20000,target:20000000,selRate:0.08,yield:0.06,want:100000,
   vol:0.18,seed:12345,dca:12,close:2475,cheap:2300,pricey:2700,tp:3300,
   income:120000,expense:75000,loanPay:55000,cash:500000,etfamt:1400000,yeartarget:100000,
+  eps26:105,eps27:135,eps28:170,peLow:20,peMid:25,peHigh:30,
   prevClose:2475,twfut:47631,us:{dow:[-0.31,0.93,-0.67],sp:[-0.02,0.51,-0.77],nas:[0.01,0.48,-0.92],sox:[-1.30,1.00,-1.61]},
   log:saved.log||[],news:(saved.news!==undefined?saved.news:null)};
 
@@ -469,6 +525,26 @@ function render(){
   document.getElementById("log_status").textContent=ls;
   drawPriceChart();
 
+  // ----- fundamentals scenario -----
+  (function(){
+    const cur=state.close;
+    const years=[["2026 底",state.eps26],["2027 底",state.eps27],["2028 底",state.eps28]];
+    const pes=[["保守 "+state.peLow+"x",state.peLow,false],["中性 "+state.peMid+"x",state.peMid,true],["樂觀 "+state.peHigh+"x",state.peHigh,false]];
+    let html="<tr><th>年度 / 本益比</th>"+pes.map(p=>"<th>"+p[0]+"</th>").join("")+"</tr>";
+    years.forEach(([yl,eps])=>{
+      html+="<tr><td>"+yl+"<br><span style='font-size:10.5px;color:var(--muted);font-weight:400'>EPS "+eps+"</span></td>";
+      pes.forEach(([,pe,isMid])=>{
+        const px=Math.round(eps*pe);
+        const cls=px>=cur*1.02?"up":px<=cur*0.98?"dn":"flat";
+        const up=cur>0?((px-cur)/cur*100):0;
+        html+="<td class='"+(isMid?"mid":"")+"'><span class='"+cls+"'>"+px.toLocaleString()+"</span><br><span style='font-size:10px;color:var(--muted);font-weight:400'>"+(up>=0?"+":"")+up.toFixed(0)+"%</span></td>";
+      });
+      html+="</tr>";
+    });
+    const st=document.getElementById("scentable"); if(st) st.innerHTML=html;
+    const sh=document.getElementById("scen_hint"); if(sh) sh.textContent="以目前收盤 "+cur+" 為基準；你的波段目標 3,300 約等於 2026 EPS × "+(state.eps26>0?(3300/state.eps26).toFixed(0):"—")+" 倍、或 2027 EPS × "+(state.eps27>0?(3300/state.eps27).toFixed(0):"—")+" 倍。";
+  })();
+
   // ----- ETF cards -----
   const ETFS=[
     {code:"0056",name:"元大高股息",y:0.08,vol:"18.3%",conc:"金融25/半導20/電腦18",tag:"最大·最久·最分散 ｜ 風險最小"},
@@ -560,7 +636,7 @@ function render(){
 }
 
 // sliders
-["principal","monthly","target","yield","want","vol","dca","close","cheap","pricey","tp","etfamt","yeartarget","income","expense","loanPay","cash"].forEach(id=>{
+["principal","monthly","target","yield","want","vol","dca","close","cheap","pricey","tp","etfamt","yeartarget","income","expense","loanPay","cash","eps26","eps27","eps28","peLow","peMid","peHigh"].forEach(id=>{
   document.getElementById(id).addEventListener("input",e=>{state[id]=parseFloat(e.target.value);render()});
 });
 // snapshot number fields
