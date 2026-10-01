@@ -90,6 +90,11 @@ function buildNote(d) {
     } catch (e) { data[k + "Error"] = String(e); }
   }
 
+  for (const [k, sym] of [["etf18", "00918.TW"], ["etf19", "00919.TW"]]) {
+    try { const c = await chart(sym); data[k] = { price: Number(c.price.toFixed(2)) }; }
+    catch (e) { data[k + "Error"] = String(e); }
+  }
+
   // 自動解讀（依數據，非新聞/非投資建議）
   try { data.note = buildNote(data); } catch (e) { data.noteError = String(e); }
 

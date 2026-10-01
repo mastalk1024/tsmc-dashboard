@@ -735,11 +735,12 @@ function renderBuys(){
   });
   // strategy triggers
   const rows=[["00918",state.base18],["00919",state.base19]];
-  let t="<tr><th>ETF / 基準價</th><th>跌1% 買1張</th><th>跌1.5% 買1張</th><th>漲1% 買500股</th></tr>";
+  let t="<tr><th>ETF / 基準價</th><th>跌1% 1張</th><th>跌2% 2張</th><th>跌3% 3張</th><th>漲1% 500股</th></tr>";
   rows.forEach(([n,b])=>{
-    t+="<tr><td>"+n+"<br><span style='font-size:10px;color:var(--muted);font-weight:400'>"+b+"</span></td>"+
+    t+="<tr><td>"+n+"<br><span style='font-size:10px;color:var(--muted);font-weight:400'>"+b.toFixed(2)+"</span></td>"+
        "<td class='up'>"+(b*0.99).toFixed(2)+"</td>"+
-       "<td class='up'>"+(b*0.985).toFixed(2)+"</td>"+
+       "<td class='up'>"+(b*0.98).toFixed(2)+"</td>"+
+       "<td class='up'>"+(b*0.97).toFixed(2)+"</td>"+
        "<td class='dn'>"+(b*1.01).toFixed(2)+"</td></tr>";
   });
   document.getElementById("buytrig").innerHTML=t;
@@ -796,6 +797,8 @@ async function loadAuto(){
       if(d.tsmc.prevClose){state.prevClose=d.tsmc.prevClose; const pc=document.getElementById('prevClose'); if(pc)pc.value=d.tsmc.prevClose;}
     }
     if(d.twii){state.twfut=d.twii; const tf=document.getElementById('twfut'); if(tf)tf.value=d.twii;}
+    if(d.etf18&&d.etf18.price){state.base18=d.etf18.price; const b18=document.getElementById('base18'); if(b18)b18.value=d.etf18.price;}
+    if(d.etf19&&d.etf19.price){state.base19=d.etf19.price; const b19=document.getElementById('base19'); if(b19)b19.value=d.etf19.price;}
     if(d.note){const an=document.getElementById('autonote'); if(an)an.textContent=d.note;}
     ['dow','sp','nas','sox'].forEach(k=>{
       if(Array.isArray(d[k])){
