@@ -13,6 +13,24 @@ async function chart(symbol, range = "10d") {
   return { closes, price: meta.regularMarketPrice, prevClose: meta.chartPreviousClose ?? meta.previousClose };
 }
 
+// 抓某檔近兩個月每日成交量（張），回傳 [{d,v}]
+async function volHist(symbol, range = "2mo") {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=1d`;
+  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (compatible; tsmc-dashboard/1.0)" } });
+  if (!r.ok) throw new Error(`${symbol} vol HTTP ${r.status}`);
+  const j = await r.json();
+  const res = j.chart.result[0];
+  const ts = res.timestamp || [];
+  const vol = (res.indicators.quote[0].volume) || [];
+  const out = [];
+  for (let i = 0; i < ts.length; i++) {
+    if (vol[i] == null) continue;
+    const d = new Date(ts[i] * 1000).toLocaleDateString("en-CA", { timeZone: "Asia/Taipei" });
+    out.push({ d, v: Math.round(vol[i] / 1000) });
+  }
+  return out;
+}
+
 // 取最近 n 個交易日的日漲跌 %
 function pctSeries(closes, n = 3) {
   const out = [];
@@ -115,6 +133,25 @@ function buildNote(d) {
     }
     data.tsmcHistory = hist;
   } catch (e) { data.tsmcHistoryError = String(e); }
+
+  // 三檔每日成交量（張）累積紀錄（之後每天自動累加）
+  try {
+    let vh = {};
+    if (fs.existsSync("data.json")) {
+      const prev = JSON.parse(fs.readFileSync("data.json", "utf8"));
+      if (prev.volHistory) vh = prev.volHistory;
+    }
+    for (const [k, sym] of [["tsmc", "2330.TW"], ["e18", "00918.TW"], ["e19", "00919.TW"], ["twii", "^TWII"]]) {
+      try {
+        const fresh = await volHist(sym);
+        const map = {};
+        (vh[k] || []).forEach((x) => (map[x.d] = x.v));
+        fresh.forEach((x) => (map[x.d] = x.v));
+        vh[k] = Object.keys(map).sort().map((d) => ({ d, v: map[d] })).slice(-40);
+      } catch (e) {}
+    }
+    data.volHistory = vh;
+  } catch (e) { data.volHistoryError = String(e); }
 
   const gotSomething = data.tsmc || data.twii || data.dow || data.sp || data.nas || data.sox;
   if (!gotSomething && fs.existsSync("data.json")) {
