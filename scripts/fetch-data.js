@@ -141,7 +141,7 @@ function buildNote(d) {
       const prev = JSON.parse(fs.readFileSync("data.json", "utf8"));
       if (prev.volHistory) vh = prev.volHistory;
     }
-    for (const [k, sym] of [["tsmc", "2330.TW"], ["e18", "00918.TW"], ["e19", "00919.TW"], ["twii", "^TWII"]]) {
+    for (const [k, sym] of [["tsmc", "2330.TW"], ["e18", "00918.TW"], ["e19", "00919.TW"]]) {
       try {
         const fresh = await volHist(sym);
         const map = {};
@@ -152,6 +152,43 @@ function buildNote(d) {
     }
     data.volHistory = vh;
   } catch (e) { data.volHistoryError = String(e); }
+
+  // 大盤每日成交（金額 億元 + 張數 萬張），來源：證交所 TWSE FMTQIK，每日累積
+  try {
+    let mkt = {};
+    if (fs.existsSync("data.json")) {
+      const prev = JSON.parse(fs.readFileSync("data.json", "utf8"));
+      if (prev.mktTurnover) mkt = prev.mktTurnover;   // { iso: {amt, lot} }
+    }
+    const now = new Date();
+    const params = [];
+    for (let i = 0; i < 2; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      params.push(`${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}01`);
+    }
+    for (const ymd of params) {
+      try {
+        const url = `https://www.twse.com.tw/exchangeReport/FMTQIK?response=json&date=${ymd}`;
+        const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (compatible; tsmc-dashboard/1.0)" } });
+        if (!r.ok) continue;
+        const j = await r.json();
+        (j.data || []).forEach((row) => {
+          const m = String(row[0]).split("/");  // 民國 115/10/07
+          if (m.length === 3) {
+            const iso = `${Number(m[0]) + 1911}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+            const shares = Number(String(row[1]).replace(/,/g, ""));  // 成交股數
+            const amtY = Math.round(Number(String(row[2]).replace(/,/g, "")) / 1e8);  // 元→億
+            const lotW = Math.round(shares / 1000 / 1e4 * 10) / 10;  // 股→張→萬張(1位小數)
+            if (amtY > 0) mkt[iso] = { amt: amtY, lot: lotW };
+          }
+        });
+      } catch (e) {}
+    }
+    const keys = Object.keys(mkt).sort().slice(-40);
+    const trimmed = {}; keys.forEach((k) => (trimmed[k] = mkt[k]));
+    data.mktTurnover = trimmed;
+    data.mktSeries = keys.map((d) => ({ d, amt: mkt[d].amt, lot: mkt[d].lot }));
+  } catch (e) { data.mktTurnoverError = String(e); }
 
   const gotSomething = data.tsmc || data.twii || data.dow || data.sp || data.nas || data.sox;
   if (!gotSomething && fs.existsSync("data.json")) {

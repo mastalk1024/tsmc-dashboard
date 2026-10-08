@@ -224,7 +224,11 @@
       </div>
       <svg id="volall" viewBox="0 0 760 250" preserveAspectRatio="none"></svg>
     </div>
-    <div class="phase"><span class="pnum">■</span> 大盤成交量趨勢（加權指數，張 / 日）</div>
+    <div class="phase"><span class="pnum">■</span> 大盤每日成交（金額＋張數，每日累積）</div>
+    <div class="fanlegend" style="margin:0 6px 8px">
+      <span class="lg"><span class="sw" style="background:#C98BC9"></span>成交金額（億）</span>
+      <span class="lg"><span class="sw" style="background:#5FBF8F"></span>成交張數（萬張）</span>
+    </div>
     <div class="chartwrap">
       <svg id="volmkt" viewBox="0 0 760 250" preserveAspectRatio="none"></svg>
     </div>
@@ -514,7 +518,7 @@ const state={principal:4690000,monthly:20000,target:20000000,selRate:0.08,yield:
   eps26:105,eps27:135,eps28:170,peLow:20,peMid:25,peHigh:30,
   buys18:(saved.buys18&&saved.buys18.length?saved.buys18:[{p:33.93,sh:5000,fee:67}]),
   buys19:(saved.buys19&&saved.buys19.length?saved.buys19:[{p:31.95,sh:5000,fee:63}]),
-  base18:33.93,base19:31.95,budget:1070000,tsmcHist:[],volHist:{tsmc:[],e18:[],e19:[]},
+  base18:33.93,base19:31.95,budget:1070000,tsmcHist:[],volHist:{tsmc:[],e18:[],e19:[]},mktSeries:[],
   div:(saved.div||{
     tsmc:{name:"台積電 2330",ex:"2026-12-11",amt:7.00,pay:"2027-01-13"},
     e18:{name:"00918",ex:"2026-12-18",amt:0,pay:"2027-01-15"},
@@ -829,6 +833,34 @@ function renderTsmcTier(){
   const t=document.getElementById("tsmctier"); if(t)t.innerHTML=h;
   const hh=document.getElementById("tsmctier_hint"); if(hh)hh.textContent="基準＝最新收盤 "+base+"；以 50 股（零股）為單位，漲越多買越多（動能加碼）。提醒：上漲時買會拉高平均成本。";
 }
+function drawMktCombo(elId,rows){
+  const el=document.getElementById(elId); if(!el) return;
+  if(!rows||!rows.length){el.innerHTML='<text x="380" y="125" fill="#7E92A3" font-size="12" text-anchor="middle">排程更新後顯示大盤成交</text>';return;}
+  const W=760,H=250,pl=52,pr=52,pt=22,pb=26,iw=W-pl-pr,ih=H-pt-pb;
+  const n=rows.length;
+  const maxA=Math.max.apply(null,rows.map(r=>r.amt))||1;
+  const maxL=Math.max.apply(null,rows.map(r=>r.lot))||1;
+  const sx=i=>pl+(n<=1?iw/2:(i/(n-1))*iw);
+  const syA=v=>pt+ih-(v/maxA)*ih, syL=v=>pt+ih-(v/maxL)*ih;
+  let g="";
+  for(let i=0;i<=4;i++){const yy=pt+ih-(ih*i/4);g+='<line x1="'+pl+'" y1="'+yy.toFixed(1)+'" x2="'+(W-pr)+'" y2="'+yy.toFixed(1)+'" stroke="#243544"/>';}
+  const step=Math.max(1,Math.ceil(n/8));
+  for(let i=0;i<n;i+=step)g+='<text x="'+sx(i).toFixed(1)+'" y="'+(H-8)+'" fill="#7E92A3" font-size="9.5" text-anchor="middle">'+rows[i].d.slice(5)+'</text>';
+  // amount line (pink) + labels
+  let dA=""; rows.forEach((r,i)=>{dA+=(i?"L":"M")+sx(i).toFixed(1)+" "+syA(r.amt).toFixed(1)+" ";});
+  g+='<path d="'+dA+'" fill="none" stroke="#C98BC9" stroke-width="2"/>';
+  // lot line (green) + labels
+  let dL=""; rows.forEach((r,i)=>{dL+=(i?"L":"M")+sx(i).toFixed(1)+" "+syL(r.lot).toFixed(1)+" ";});
+  g+='<path d="'+dL+'" fill="none" stroke="#5FBF8F" stroke-width="2"/>';
+  // per-point labels: amount above its point, lot below its point
+  rows.forEach((r,i)=>{
+    g+='<circle cx="'+sx(i).toFixed(1)+'" cy="'+syA(r.amt).toFixed(1)+'" r="2.2" fill="#C98BC9"/>';
+    g+='<circle cx="'+sx(i).toFixed(1)+'" cy="'+syL(r.lot).toFixed(1)+'" r="2.2" fill="#5FBF8F"/>';
+    g+='<text x="'+sx(i).toFixed(1)+'" y="'+(syA(r.amt)-6).toFixed(1)+'" fill="#C98BC9" font-size="9" text-anchor="middle">'+Math.round(r.amt).toLocaleString()+'</text>';
+    g+='<text x="'+sx(i).toFixed(1)+'" y="'+(syL(r.lot)+13).toFixed(1)+'" fill="#5FBF8F" font-size="9" text-anchor="middle">'+r.lot.toLocaleString()+'</text>';
+  });
+  el.innerHTML=g;
+}
 function drawVol(elId,series){
   const el=document.getElementById(elId); if(!el) return;
   const vb=(el.getAttribute("viewBox")||"0 0 760 250").split(/\s+/).map(Number);
@@ -856,7 +888,7 @@ function drawVol(elId,series){
 function renderVolChart(){
   const V=state.volHist||{};
   drawVol("volall",[["#46B39D",V.tsmc||[]],["#E4B363",V.e18||[]],["#8FB0E0",V.e19||[]]]);
-  drawVol("volmkt",[["#C98BC9",V.twii||[]]]);
+  drawMktCombo("volmkt",state.mktSeries||[]);
   drawVol("voltsmc",[["#46B39D",V.tsmc||[]]]);
   drawVol("voletf",[["#E4B363",V.e18||[]],["#8FB0E0",V.e19||[]]]);
 }
@@ -952,6 +984,7 @@ async function loadAuto(){
     if(d.note){const an=document.getElementById('autonote'); if(an)an.textContent=d.note;}
     if(Array.isArray(d.tsmcHistory)) state.tsmcHist=d.tsmcHistory;
     if(d.volHistory) state.volHist=d.volHistory;
+    if(Array.isArray(d.mktSeries)) state.mktSeries=d.mktSeries;
     ['dow','sp','nas','sox'].forEach(k=>{
       if(Array.isArray(d[k])){
         let arr=d[k].slice(-3); while(arr.length<3)arr.unshift(0);
