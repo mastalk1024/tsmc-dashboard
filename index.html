@@ -215,6 +215,14 @@
       <div class="fhint" id="ops_hint"></div>
     </div>
     <div class="disc">基準＝各檔最近收盤（排程收盤後更新，盤中即為昨收）。跌越多買越多（往下加碼），以 50 股為單位。提醒：這是紀律框架、不是預測；台積電另有「漲加碼」表在「每日進場」分頁。非投資建議。</div>
+
+    <div class="phase" style="color:var(--red)"><span class="pnum" style="background:var(--red);color:#2a1313">▲</span> 依昨收，今天漲到這些價位就分批買（追動能）</div>
+    <div class="chartwrap" style="padding:14px 16px">
+      <div class="scenwrap"><table class="scen" id="upstable"></table></div>
+      <div class="fhint" id="ups_hint"></div>
+    </div>
+    <div class="disc">追動能時「漲 1% 買 50、漲 2% 買 100、漲 3% 買 150 股」。⚠ 上漲時買會<b>拉高平均成本</b>，與上面「跌買」相反——一個順勢、一個逆勢，依當天策略擇一。非投資建議。</div>
+
     <div class="phase"><span class="pnum">■</span> 個股成交量趨勢（張 / 日，每日累積）</div>
     <div class="chartwrap">
       <div class="fanlegend">
@@ -667,6 +675,7 @@ function render(){
   renderTsmcTier();
   renderVolChart();
   renderTodayOps();
+  renderTodayUp();
 
   // ----- fundamentals scenario -----
   (function(){
@@ -808,6 +817,22 @@ function renderBuys(){
   const avgP=(state.base18+state.base19)/2;
   const lots=avgP>0?Math.floor(state.budget/(avgP*1000)):0;
   document.getElementById("buy_hint").textContent="剩餘預算 $"+Math.round(state.budget).toLocaleString()+"，以均價約 "+avgP.toFixed(2)+" 計，約可再買 "+lots+" 張（一天最多 3 次；建議跌越多買越多）。";
+}
+function renderTodayUp(){
+  const el=document.getElementById("upstable"); if(!el) return;
+  const rows=[["台積電 2330",state.close],["00918",state.base18],["00919",state.base19]];
+  const tiers=[[0.01,50],[0.02,100],[0.03,150]];
+  let h="<tr><th>股票 / 昨收</th>"+tiers.map(([p,sh])=>"<th>漲"+Math.round(p*100)+"% 買"+sh+"股</th>").join("")+"</tr>";
+  rows.forEach(([n,b])=>{
+    const dp=b>=100?0:2;
+    h+="<tr><td>"+n+"<br><span style='font-size:10.5px;color:var(--muted);font-weight:400'>昨收 "+(b?b.toFixed(dp):"—")+"</span></td>";
+    tiers.forEach(([p,sh])=>{const px=b*(1+p),amt=Math.round(px*sh);
+      h+="<td><span class='dn'>"+px.toFixed(dp)+"</span><br><span style='font-size:10px;color:var(--muted);font-weight:400'>"+sh+"股 $"+amt.toLocaleString()+"</span></td>";});
+    h+="</tr>";
+  });
+  el.innerHTML=h;
+  const hh=document.getElementById("ups_hint");
+  if(hh)hh.textContent="三檔皆以昨收為基準：漲 1% 買 50 股、漲 2% 買 100 股、漲 3% 買 150 股。紅色為買進觸發價（追動能、會拉高均價）。";
 }
 function renderTodayOps(){
   const el=document.getElementById("opstable"); if(!el) return;
